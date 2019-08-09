@@ -7,7 +7,7 @@ from scm_api.storage_object import StorageObject, StorageObjectCollection, Stora
 class ServerFolder(StorageObject, StorageObjectFolder):
 
     def __init__(self, req_session: Session, base_url: str, name: str, instance_id: str,
-                 parent_id: Optional['ServerFolder']=None) -> None:
+                 parent_id: Optional[str]=None) -> None:
         StorageObject.__init__(self,
                                req_session=req_session,
                                base_url=base_url,

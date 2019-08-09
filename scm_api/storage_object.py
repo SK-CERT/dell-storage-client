@@ -17,7 +17,7 @@ class StorageObject:
 
 class StorageObjectFolder:
 
-    def __init__(self, parent_id: str):
+    def __init__(self, parent_id: Optional[str]):
         self.parent_id = parent_id
 
     @property
