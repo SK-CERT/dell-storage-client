@@ -15,9 +15,11 @@ class StorageObject:
         return "%s: %s (%s)" % (self.__class__, self.name, self.instance_id)
 
 
-class StorageObjectFolder:
+class StorageObjectFolder(StorageObject):
 
-    def __init__(self, parent_id: Optional[str]):
+    def __init__(self, req_session: Session, base_url: str, name: str,
+                 instance_id: str, parent_id: Optional[str]) -> None:
+        super().__init__(req_session, base_url, name, instance_id)
         self.parent_id = parent_id
 
     @property
@@ -51,3 +53,20 @@ class StorageObjectCollection(Iterable):
 
     def all_objects(self) -> List[StorageObject]:
         return [item for item in self._store.values()]
+
+
+class StorageObjectFolderCollection(StorageObjectCollection):
+
+    def root_folder(self) -> Optional[StorageObjectFolder]:
+        for folder in self:
+            if folder.is_root:
+                return folder
+        else:
+            return None
+
+    def find_by_parent_id(self, parent_id: str) -> 'StorageObjectFolderCollection':
+        result = StorageObjectFolderCollection()
+        for server_folder in self:
+            if server_folder.instance_id == parent_id:
+                result.add(server_folder)
+        return result
