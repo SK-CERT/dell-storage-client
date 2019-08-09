@@ -94,7 +94,6 @@ class ScmSession:
         else:
             resp = self.session.get(url=url)
             if resp.status_code == 200:
-                print(json.dumps(resp.json(), indent=2))
                 for sc in resp.json():
                     storage_centers.add(StorageCenter(req_session=self.session,
                                                       base_url=self.base_url,
