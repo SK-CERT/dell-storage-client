@@ -24,22 +24,14 @@ class StorageCenter(StorageObject):
         return self.base_url + self.VOLUME_FOLDER_LIST_ENDPOINT % self.instance_id
 
     def server_folder_list(self) ->StorageObjectFolderCollection:
-        result = StorageObjectFolderCollection()
-        resp = self.session.get(self.server_folder_list_url)
-        if resp.status_code == 200:
-            for server_folder in resp.json():
-                result.add(StorageObjectFolder(req_session=self.session,
-                                               base_url=self.base_url,
-                                               instance_id=server_folder['instanceId'],
-                                               name=server_folder['name'],
-                                               parent_id=server_folder.get('parent', {}).get('instanceId', None)))
-        else:
-            print("Error: Cant fetch server folders (%d) - %s" % (resp.status_code, resp.text))
-        return result
+        return self._fetch_folder_list(self.server_folder_list_url)
 
     def volume_folder_list(self) ->StorageObjectFolderCollection:
+        return self._fetch_folder_list(url=self.volume_folder_list_url)
+
+    def _fetch_folder_list(self, url) ->StorageObjectFolderCollection:
         result = StorageObjectFolderCollection()
-        resp = self.session.get(self.volume_folder_list_url)
+        resp = self.session.get(url)
         if resp.status_code == 200:
             for volume_folder in resp.json():
                 result.add(StorageObjectFolder(req_session=self.session,
@@ -48,7 +40,7 @@ class StorageCenter(StorageObject):
                                                name=volume_folder['name'],
                                                parent_id=volume_folder.get('parent', {}).get('instanceId', None)))
         else:
-            print("Error: Failed to fetch volume folders (%d) - %s" % (resp.status_code, resp.text))
+            print("Error: Failed to fetch folders (%d) - %s" % (resp.status_code, resp.text))
         return result
 
 
