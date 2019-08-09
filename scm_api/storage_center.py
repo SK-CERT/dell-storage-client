@@ -29,7 +29,7 @@ class StorageCenter(StorageObject):
                                         base_url=self.base_url,
                                         instance_id=server_folder['instanceId'],
                                         name=server_folder['name'],
-                                        parent=server_folder.get('parent', None)))
+                                        parent_id=server_folder.get('parent', {}).get('instanceId', None)))
         else:
             print("Error: Cant fetch server folders (%d) - %s" % (resp.status_code, resp.text))
         return result

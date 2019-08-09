@@ -1,19 +1,19 @@
 from requests import Session
 from typing import Optional
 
-from scm_api.storage_object import StorageObject, StorageObjectCollection
+from scm_api.storage_object import StorageObject, StorageObjectCollection, StorageObjectFolder
 
 
-class ServerFolder(StorageObject):
+class ServerFolder(StorageObject, StorageObjectFolder):
 
     def __init__(self, req_session: Session, base_url: str, name: str, instance_id: str,
-                 parent: Optional['ServerFolder']=None) -> None:
-        super().__init__(req_session, base_url, name, instance_id)
-        self.parent = parent
-
-    @property
-    def is_root(self) -> bool:
-        return self.parent is None
+                 parent_id: Optional['ServerFolder']=None) -> None:
+        StorageObject.__init__(self,
+                               req_session=req_session,
+                               base_url=base_url,
+                               name=name,
+                               instance_id=instance_id)
+        StorageObjectFolder.__init__(self, parent_id)
 
 
 class ServerFolderCollection(StorageObjectCollection):

@@ -15,6 +15,16 @@ class StorageObject:
         return "%s: %s (%s)" % (self.__class__, self.name, self.instance_id)
 
 
+class StorageObjectFolder:
+
+    def __init__(self, parent_id: str):
+        self.parent_id = parent_id
+
+    @property
+    def is_root(self) -> bool:
+        return self.parent_id is None
+
+
 class StorageObjectCollection(Iterable):
 
     def __iter__(self) -> Iterator:
