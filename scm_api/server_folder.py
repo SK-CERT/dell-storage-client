@@ -25,7 +25,9 @@ class ServerFolderCollection(StorageObjectCollection):
                 result.add(server_folder)
         return result
 
-    def root_folder(self) -> ServerFolder:
+    def root_folder(self) -> Optional[ServerFolder]:
         for folder in self:
             if folder.is_root:
                 return folder
+        else:
+            return None
