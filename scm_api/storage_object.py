@@ -32,6 +32,9 @@ class StorageObjectCollection(Iterable):
     def __iter__(self) -> Iterator:
         return self._store.values().__iter__()
 
+    def __bool__(self):
+        return True if self._store else False
+
     def __len__(self) -> int:
         return len(self._store)
 
