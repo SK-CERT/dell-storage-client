@@ -7,6 +7,12 @@ from scm_api.storage_object import StorageObject, StorageObjectCollection
 class Volume(StorageObject):
 
     ENDPOINT = '/StorageCenter/ScVolume'
+    VOLUME_ENDPOINT = '/StorageCenter/ScVolume/%s'
+    MAPPING_ENDPOINT = '/StorageCenter/ScVolume/%s/MapToServer'
+    UNMAPPING_ENDPOINT = '/StorageCenter/ScVolume/%s/Unmap'
+    RECYCLE_ENDPOINT = '/StorageCenter/ScVolume/%s/Recycle'
+    EXPAND_TO_SIZE_ENDPOINT = '/StorageCenter/ScVolume/%s/ExpandToSize'
+    EXPAND_ENDPOINT = '/StorageCenter/ScVolume/%s/Expand'
 
     def __init__(self, req_session: Session, base_url: str, name: str, instance_id: str,
                  parent_folder_id: str, wwid: str) -> None:
@@ -23,10 +29,130 @@ class Volume(StorageObject):
                       parent_folder_id=source_dict['volumeFolder']['instanceId'],
                       wwid=source_dict['deviceId'])
 
+    @property
+    def mapping_url(self) ->str:
+        return self.build_url(self.MAPPING_ENDPOINT)
+
+    @property
+    def unmapping_url(self) ->str:
+        return self.build_url(self.UNMAPPING_ENDPOINT)
+
+    @property
+    def recycle_url(self) ->str:
+        return self.build_url(self.RECYCLE_ENDPOINT)
+
+    @property
+    def delete_url(self) ->str:
+        return self.build_url(self.VOLUME_ENDPOINT)
+
+    @property
+    def expand_url(self) ->str:
+        return self.build_url(self.EXPAND_ENDPOINT)
+
+    @property
+    def expand_to_size_url(self) ->str:
+        return self.build_url(self.EXPAND_TO_SIZE_ENDPOINT)
+
+    @property
+    def modify_url(self) ->str:
+        return self.build_url(self.VOLUME_ENDPOINT)
+
+    @property
+    def details_url(self) ->str:
+        return self.build_url(self.VOLUME_ENDPOINT)
+
+    def build_url(self, endpoint_url: str) ->str:
+        return self.base_url + endpoint_url % self.instance_id
+
+    def map_to_server(self, server_id: str) ->bool:
+        success = False
+        payload = {'Server': server_id}
+        resp = self.session.post(self.mapping_url, json=payload)
+        if resp.status_code == 200:
+            success = True
+            print("OK - Volume mapped successfully")
+        else:
+            print("Error: Failed to map volume - %s" % resp.json().get('result'))
+        return success
+
+    def unmap(self) ->bool:
+        success = False
+        resp = self.session.post(self.unmapping_url)
+        if resp.status_code == 204:
+            success = True
+            print('OK - Volume successfully unmapped')
+        else:
+            print('Error: Failed to unamp volume - %s' % resp.text)
+        return success
+
+    def expand(self, size: str) ->bool:
+        success = False
+        payload = {"ExpandAmount": size}
+        resp = self.session.post(self.expand_url, json=payload)
+        if resp.status_code == 200:
+            success = True
+            print("OK - Volume expanded by %s" % size)
+        else:
+            print("Error: Failed to expand volume - %s" % resp.json().get('result'))
+        return success
+
+    def expand_to_size(self, size: str) ->bool:
+        success = False
+        payload = {"NewSize": size}
+        resp = self.session.post(self.expand_to_size_url, json=payload)
+        if resp.status_code == 200:
+            success = True
+            print("OK - Volume expanded to size %s" % size)
+        else:
+            print("Error: Failed to expand volume - %s" % resp.json().get('result'))
+        return success
+
+    def recycle(self) ->bool:
+        success = False
+        resp = self.session.post(self.recycle_url)
+        if resp.status_code == 204:
+            success = True
+            print('OK - Volume successfully moved to recycle bin')
+        else:
+            print('Error: Failed to recycle volume - %s' % resp.text)
+        return success
+
+    def delete(self) ->bool:
+        success = False
+        resp = self.session.delete(self.delete_url)
+        if resp.status_code == 200:
+            success = True
+            print("Ok - Volume successfully deleted")
+        else:
+            print("Error: Failed to delete volume - %s" % resp.json().get('result'))
+        return success
+
+    def _modify_volume(self, payload: Dict[str, str]) ->bool:
+        success = False
+        resp = self.session.put(self.modify_url, json=payload)
+        print(resp.status_code)
+        print(resp.text)
+        return success
+
+    def rename(self, new_name: str) ->bool:
+        return self._modify_volume({"Name": new_name})
+
+    def move_to_folder(self, volume_folder_id: str) ->bool:
+        return self._modify_volume({"VolumeFolder": volume_folder_id})
+
+    def details(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {}
+        resp = self.session.put(self.details_url)
+        if resp.status_code == 200:
+            result = resp.json()
+        else:
+            print("Error: Failed to fetch volume details")
+        return result
+
 
 class VolumeCollection(StorageObjectCollection):
 
-    def find_by_parend_folder(self, folder_id: str) ->'VolumeCollection':
+    def find_by_parent_folder(self, folder_id: str) -> 'VolumeCollection':
         result = VolumeCollection()
         for volume in self:
             if volume.parent_folder_id == folder_id:
