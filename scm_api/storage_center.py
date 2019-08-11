@@ -2,7 +2,7 @@ import requests
 from typing import Any
 
 from scm_api.storage_object import *
-from scm_api.volume import Volume, VolumeCollection
+from scm_api.volume import Volume, VolumeCollection, VolumeFolder
 
 
 class StorageCenter(StorageObject):
@@ -52,25 +52,30 @@ class StorageCenter(StorageObject):
                                         source_dict=volume_data))
         return result
 
-    def new_volume(self, name: str, size: str, volume_folder: str='') ->Optional[Volume]:
-        if not volume_folder:
-            all_folders = self.volume_folder_list()
-            if not all_folders:
-                print("Error: Failed to create new volume. Failed to fetch default volume folder")
+    def _find_volume_folder_root(self) ->Optional[StorageObjectFolder]:
+        all_folders = self.volume_folder_list()
+        if not all_folders:
+            print("Error: Failed to fetch volume folder list")
+            return None
+        else:
+            root_folder = self.volume_folder_list().root_folder()
+            if root_folder is None:
+                print("Error: Failed to lookup root volume folder in list of all folders. "
+                      "This really should not happen")
                 return None
             else:
-                root_folder = self.volume_folder_list().root_folder()
-                if root_folder is None:
-                    print("Error: Failed to lookup root vlume folder in list of all folders. "
-                          "This really should not happen")
-                    return None
-                else:
-                    volume_folder = root_folder.instance_id
+                return root_folder
+
+    def new_volume(self, name: str, size: str, volume_folder_id: str= '') ->Optional[Volume]:
+        volume_folder_id = volume_folder_id if volume_folder_id else self._find_volume_folder_root().instance_id
+        if volume_folder_id is None:
+            print("Error: Failed to create new volume")
+            return None
         url = self.base_url + Volume.ENDPOINT
         payload = {"Name": name,
                    "Size": size,
                    "StorageCenter": self.instance_id,
-                   "VolumeFolder": volume_folder}
+                   "VolumeFolder": volume_folder_id}
         resp = self.session.post(url, json=payload)
         if resp.status_code == 201:
             return Volume.from_json(self.session, self.base_url, resp.json())
