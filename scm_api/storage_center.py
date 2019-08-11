@@ -66,6 +66,22 @@ class StorageCenter(StorageObject):
             else:
                 return root_folder
 
+    def new_volume_folder(self, name: str, parent_folder_id: str='') ->Optional[VolumeFolder]:
+        parent_folder_id = parent_folder_id if parent_folder_id else self._find_volume_folder_root().instance_id
+        if parent_folder_id is None:
+            print("Error: Failed to create new volume folder")
+            return None
+        url = self.base_url + VolumeFolder.ENDPOINT
+        payload = {"Name": name,
+                   "Parent": parent_folder_id,
+                   "StorageCenter": self.instance_id}
+        resp = self.session.post(url, json=payload)
+        if resp.status_code == 201:
+            return VolumeFolder.from_json(self.session, self.base_url, resp.json())
+        else:
+            print("Error: Failed to create new volume folder.")
+            return None
+
     def new_volume(self, name: str, size: str, volume_folder_id: str= '') ->Optional[Volume]:
         volume_folder_id = volume_folder_id if volume_folder_id else self._find_volume_folder_root().instance_id
         if volume_folder_id is None:

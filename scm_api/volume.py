@@ -155,3 +155,10 @@ class VolumeCollection(StorageObjectCollection):
             if volume.parent_folder_id == folder_id:
                 result.add(volume)
         return result
+
+
+class VolumeFolder(StorageObjectFolder):
+
+    ENDPOINT = '/StorageCenter/ScVolumeFolder'
+    VOLUME_FOLDER_ENDPOINT = '/StorageCenter/ScVolumeFolder/%s'
+
