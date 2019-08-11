@@ -127,8 +127,11 @@ class Volume(StorageObject):
     def _modify_volume(self, payload: Dict[str, str]) ->bool:
         success = False
         resp = self.session.put(self.modify_url, json=payload)
-        print(resp.status_code)
-        print(resp.text)
+        if resp.status_code == 200:
+            success = True
+            print("Ok - Volume modified")
+        else:
+            print("Error: Failed to modify volume")
         return success
 
     def rename(self, new_name: str) ->bool:
@@ -162,3 +165,57 @@ class VolumeFolder(StorageObjectFolder):
     ENDPOINT = '/StorageCenter/ScVolumeFolder'
     VOLUME_FOLDER_ENDPOINT = '/StorageCenter/ScVolumeFolder/%s'
 
+    @classmethod
+    def from_json(cls, req_session: Session, base_url: str, source_dict: Dict[Any, Any]) ->'VolumeFolder':
+        return VolumeFolder(req_session=req_session,
+                            base_url=base_url,
+                            name=source_dict["name"],
+                            instance_id=source_dict["instanceId"],
+                            parent_id=source_dict.get('parent', {}).get('instanceId', None))
+
+    @property
+    def modify_url(self):
+        return self.build_url(self.VOLUME_FOLDER_ENDPOINT)
+    
+    @property
+    def details_url(self):
+        return self.build_url(self.VOLUME_FOLDER_ENDPOINT)
+    
+    @property
+    def delete_url(self):
+        return self.build_url(self.VOLUME_FOLDER_ENDPOINT)
+
+    def _modify_volume_folder(self, payload: Dict[str, str]) ->bool:
+        success = False
+        resp = self.session.put(self.modify_url, json=payload)
+        if resp.status_code == 200:
+            success = True
+            print("Ok - Volume folder modified")
+        else:
+            print("Error: Failed to modify volume folder")
+        return success
+
+    def rename(self, name: str) ->bool:
+        return self._modify_volume_folder({"Name": name})
+
+    def move_to_folder(self, parent_folder_id: str) ->bool:
+        return self._modify_volume_folder({"Parent": parent_folder_id})
+
+    def details(self) ->Dict[str, Any]:
+        result: Dict[str, Any] = {}
+        resp = self.session.put(self.details_url)
+        if resp.status_code == 200:
+            result = resp.json()
+        else:
+            print("Error: Failed to fetch volume folder details")
+        return result
+
+    def delete(self) ->bool:
+        success = False
+        resp = self.session.delete(self.delete_url)
+        if resp.status_code == 200:
+            success = True
+            print("Ok - Volume folder successfully deleted")
+        else:
+            print("Error: Failed to delete volume folder - %s" % resp.json().get('result'))
+        return success

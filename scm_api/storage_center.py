@@ -36,13 +36,18 @@ class StorageCenter(StorageObject):
         return self.build_url(self.VOLUME_LIST_ENDPOINT)
 
     def server_folder_list(self) ->StorageObjectFolderCollection:
-        return self._fetch_folder_list(self.server_folder_list_url)
+        return self._fetch_object_list(self.server_folder_list_url)
 
     def server_list(self) ->StorageObjectCollection:
         return self._fetch_object_list(self.server_list_url)
 
     def volume_folder_list(self) ->StorageObjectFolderCollection:
-        return self._fetch_folder_list(url=self.volume_folder_list_url)
+        result = StorageObjectFolderCollection()
+        for volume_folder_data in self._fetch_object_list(url=self.volume_folder_list_url):
+            result.add(VolumeFolder.from_json(req_session=self.session,
+                                              base_url=self.base_url,
+                                              source_dict=volume_folder_data))
+        return result
 
     def volume_list(self) ->VolumeCollection:
         result = VolumeCollection()
@@ -98,16 +103,6 @@ class StorageCenter(StorageObject):
         else:
             print("Error: Failed to create new volume. (%d) - %s" % (resp.status_code, resp.text))
             return None
-
-    def _fetch_folder_list(self, url: str) ->StorageObjectFolderCollection:
-        result = StorageObjectFolderCollection()
-        resp = self.session.get(url)
-        if resp.status_code == 200:
-            for volume_folder in resp.json():
-                result.add(StorageObjectFolder.from_json(self.session, self.base_url, volume_folder))
-        else:
-            print("Error: Failed to fetch folders (%d) - %s" % (resp.status_code, resp.text))
-        return result
 
     def _fetch_object_list(self, url: str) ->Dict[Any, Any]:
         result: Dict[Any, Any] = {}
