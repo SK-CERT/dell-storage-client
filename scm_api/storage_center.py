@@ -21,19 +21,19 @@ class StorageCenter(StorageObject):
 
     @property
     def server_folder_list_url(self) ->str:
-        return self.base_url + self.SERVER_FOLDER_LIST_ENDPOINT % self.instance_id
+        return self.build_url(self.SERVER_FOLDER_LIST_ENDPOINT)
 
     @property
     def server_list_url(self) ->str:
-        return self.base_url + self.SERVER_LIST_ENDPOINT % self.instance_id
+        return self.build_url(self.SERVER_LIST_ENDPOINT)
 
     @property
     def volume_folder_list_url(self) ->str:
-        return self.base_url + self.VOLUME_FOLDER_LIST_ENDPOINT % self.instance_id
+        return self.build_url(self.VOLUME_FOLDER_LIST_ENDPOINT)
 
     @property
     def volume_list_url(self) ->str:
-        return self.base_url + self.VOLUME_LIST_ENDPOINT % self.instance_id
+        return self.build_url(self.VOLUME_LIST_ENDPOINT)
 
     def server_folder_list(self) ->StorageObjectFolderCollection:
         return self._fetch_folder_list(self.server_folder_list_url)
@@ -83,11 +83,7 @@ class StorageCenter(StorageObject):
         resp = self.session.get(url)
         if resp.status_code == 200:
             for volume_folder in resp.json():
-                result.add(StorageObjectFolder(req_session=self.session,
-                                               base_url=self.base_url,
-                                               instance_id=volume_folder['instanceId'],
-                                               name=volume_folder['name'],
-                                               parent_id=volume_folder.get('parent', {}).get('instanceId', None)))
+                result.add(StorageObjectFolder.from_json(self.session, self.base_url, volume_folder))
         else:
             print("Error: Failed to fetch folders (%d) - %s" % (resp.status_code, resp.text))
         return result

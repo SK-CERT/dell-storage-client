@@ -1,7 +1,7 @@
 from requests import Session
 from typing import Dict, Any
 
-from scm_api.storage_object import StorageObject, StorageObjectCollection
+from scm_api.storage_object import StorageObject, StorageObjectCollection, StorageObjectFolder
 
 
 class Volume(StorageObject):
@@ -60,9 +60,6 @@ class Volume(StorageObject):
     @property
     def details_url(self) ->str:
         return self.build_url(self.VOLUME_ENDPOINT)
-
-    def build_url(self, endpoint_url: str) ->str:
-        return self.base_url + endpoint_url % self.instance_id
 
     def map_to_server(self, server_id: str) ->bool:
         success = False

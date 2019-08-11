@@ -1,6 +1,7 @@
 from collections import Iterable
 from typing import Optional, Iterator, List, Dict
 from requests import Session
+from typing import Any
 
 
 class StorageObject:
@@ -14,6 +15,9 @@ class StorageObject:
     def __str__(self) -> str:
         return "%s: %s (%s)" % (self.__class__, self.name, self.instance_id)
 
+    def build_url(self, endpoint_url: str) ->str:
+        return self.base_url + endpoint_url % self.instance_id
+
 
 class StorageObjectFolder(StorageObject):
 
@@ -25,6 +29,15 @@ class StorageObjectFolder(StorageObject):
     @property
     def is_root(self) -> bool:
         return self.parent_id is None
+
+    @classmethod
+    def from_json(cls, req_session: Session, base_url: str, source_dict: Dict[Any, Any]) ->'StorageObjectFolder':
+        return StorageObjectFolder(req_session=req_session,
+                                   base_url=base_url,
+                                   instance_id=source_dict['instanceId'],
+                                   name=source_dict['name'],
+                                   parent_id=source_dict.get('parent', {}).get('instanceId', None)
+                                   )
 
 
 class StorageObjectCollection(Iterable):
