@@ -125,6 +125,7 @@ class Volume(StorageObject):
         return success
 
     def _modify_volume(self, payload: Dict[str, str]) ->bool:
+        # TODO: Move common functionality (like modify/rename/move) to base class
         success = False
         resp = self.session.put(self.modify_url, json=payload)
         if resp.status_code == 200:
@@ -135,10 +136,18 @@ class Volume(StorageObject):
         return success
 
     def rename(self, new_name: str) ->bool:
-        return self._modify_volume({"Name": new_name})
+        if self._modify_volume({"Name": new_name}):
+            self.name = new_name
+            return True
+        else:
+            return False
 
     def move_to_folder(self, volume_folder_id: str) ->bool:
-        return self._modify_volume({"VolumeFolder": volume_folder_id})
+        if self._modify_volume({"VolumeFolder": volume_folder_id}):
+            self.parent_folder_id = volume_folder_id
+            return True
+        else:
+            return False
 
     def details(self) -> Dict[str, Any]:
         result: Dict[str, Any] = {}
@@ -196,10 +205,18 @@ class VolumeFolder(StorageObjectFolder):
         return success
 
     def rename(self, name: str) ->bool:
-        return self._modify_volume_folder({"Name": name})
+        if self._modify_volume_folder({"Name": name}):
+            self.name = name
+            return True
+        else:
+            return False
 
     def move_to_folder(self, parent_folder_id: str) ->bool:
-        return self._modify_volume_folder({"Parent": parent_folder_id})
+        if self._modify_volume_folder({"VolumeFolder": parent_folder_id}):
+            self.parent_folder_id = parent_folder_id
+            return True
+        else:
+            return False
 
     def details(self) ->Dict[str, Any]:
         result: Dict[str, Any] = {}
