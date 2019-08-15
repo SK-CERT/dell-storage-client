@@ -66,7 +66,8 @@ class ScmSession:
     def set_password(self, password: str) -> None:
         self._auth.password = password
 
-    def login(self) -> None:
+    def login(self) -> bool:
+        success = False
         resp = self.session.post(url=self.login_url, auth=self._auth)
         if resp.status_code == 200:
             reported_api_version = resp.json().get('apiVersion', None)
@@ -76,15 +77,20 @@ class ScmSession:
                 self.conn_instance_id = resp.json()['instanceId']
             except KeyError:
                 print("ERROR: SCM API did not report connection instance ID")
+            else:
+                success = True
         else:
             print("ERROR: Login failed (%d) - %s" % (resp.status_code, resp.text))
+        return success
 
-    def logout(self) -> None:
+    def logout(self, silent: bool=False) -> None:
         resp = self.session.post(url=self.logout_url)
         if resp.status_code == 204:
-            print("Logout - OK")
+            if not silent:
+                print("Logout - OK")
         else:
-            print("WARNING: Logout failed (%d) - %s" % (resp.status_code, resp.text))
+            if not silent:
+                print("WARNING: Logout failed (%d) - %s" % (resp.status_code, resp.text))
 
     def storage_centers(self) -> StorageCenterCollection:
         url = self.sc_list_url
