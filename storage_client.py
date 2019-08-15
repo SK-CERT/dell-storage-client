@@ -21,7 +21,7 @@ class ReturnCode:
     FAILURE = 1
 
 
-def volume_create(storage: StorageCenter, name: str,size: str,
+def volume_create(storage: StorageCenter, name: str, size: str,
                   unique_name: bool=True, folder_id: str='') ->int:
     if unique_name and storage.volume_list().find_by_name(name):
         print("Volume with name '%s' already exists" % name)
@@ -89,7 +89,7 @@ def _find_storage_center(session: ScmSession, instance_id: str) ->Optional[Stora
     sc = session.storage_centers().find_by_instance_id(instance_id)
     if sc is None:
         print("Failed to find storage center with instance ID '%s'. Try listing all storage "
-              "centers with command 'storage_center list'" % args.storage_id)
+              "centers with command 'storage_center list'" % cli_args.storage_id)
         return None
     else:
         return sc
@@ -116,7 +116,7 @@ def parse_arguments() ->argparse.Namespace:
     storage_center_parser = command_parser.add_parser(CMD_CONST_STORAGE_CENTER)
     storage_center_parser_cmd = storage_center_parser.add_subparsers(dest='storage_center_commands')
     # List Storage centers
-    storage_center_list_args = storage_center_parser_cmd.add_parser(CMD_CONST_STORAGE_CENTER_LIST)
+    storage_center_parser_cmd.add_parser(CMD_CONST_STORAGE_CENTER_LIST)
 
     # Volume subcommands
     volume_parser = command_parser.add_parser(CMD_CONST_VOLUME)
@@ -223,19 +223,19 @@ def execute_command(args: argparse.Namespace, session: ScmSession) ->int:
 
 if __name__ == '__main__':
     # parse CLI arguments
-    args = parse_arguments()
+    cli_args = parse_arguments()
 
     # Request missing arguments via CLI dialog
-    if not args.user:
-        args.user = input("Username: ")
+    if not cli_args.user:
+        cli_args.user = input("Username: ")
 
-    if not args.password:
-        args.password = getpass.getpass()
+    if not cli_args.password:
+        cli_args.password = getpass.getpass()
 
     # Initialize Session with Storage controller
-    scm_session = ScmSession(args.user, args.password, args.host, args.port, verify_cert=False)
+    scm_session = ScmSession(cli_args.user, cli_args.password, cli_args.host, cli_args.port, verify_cert=False)
     if not scm_session.login():
         exit(ReturnCode.SUCCESS)
 
-    ret_code = execute_command(args, scm_session)
+    ret_code = execute_command(cli_args, scm_session)
     exit_cli(scm_session, ret_code)
