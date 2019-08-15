@@ -24,7 +24,7 @@ class ReturnCode:
 
 
 def volume_create(storage: StorageCenter, name: str, size: str,
-                  unique_name: bool=True, folder_id: str='') ->int:
+                  unique_name: bool = True, folder_id: str = '') -> int:
     if unique_name and storage.volume_list().find_by_name(name):
         print("Volume with name '%s' already exists" % name)
         return ReturnCode.FAILURE
@@ -34,7 +34,7 @@ def volume_create(storage: StorageCenter, name: str, size: str,
         return ReturnCode.FAILURE
 
 
-def volume_list(storage: StorageCenter, folder_id: str='') ->int:
+def volume_list(storage: StorageCenter, folder_id: str = '') -> int:
     table = Texttable(max_width=120)
     all_volumes = storage.volume_list()
     if folder_id:
@@ -48,7 +48,7 @@ def volume_list(storage: StorageCenter, folder_id: str='') ->int:
     return ReturnCode.SUCCESS
 
 
-def volume_folder_list(storage: StorageCenter, parent_id: str='') ->int:
+def volume_folder_list(storage: StorageCenter, parent_id: str = '') -> int:
     # TODO: Adaptable table width
     table = Texttable(max_width=120)
     table.header(['Folder', 'Instance ID', 'Parent Instance ID'])
@@ -63,8 +63,8 @@ def volume_folder_list(storage: StorageCenter, parent_id: str='') ->int:
     return ReturnCode.SUCCESS
 
 
-def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent_id: str='',
-                         unique_name: bool=True) ->int:
+def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent_id: str = '',
+                         unique_name: bool = True) -> int:
     if unique_name and storage.volume_folder_list().find_by_name(folder_name):
         print("Volume folder with name '%s' already exists" % folder_name)
         return ReturnCode.FAILURE
@@ -74,7 +74,7 @@ def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent
         return ReturnCode.FAILURE
 
 
-def storage_center_list(session: DsmSession) ->int:
+def storage_center_list(session: DsmSession) -> int:
     storage_centers = session.storage_centers()
     table = Texttable()
     table.header(["Name", "IP", "Instance ID", "Serial"])
@@ -87,7 +87,7 @@ def storage_center_list(session: DsmSession) ->int:
     return ReturnCode.SUCCESS
 
 
-def _find_storage_center(session: DsmSession, instance_id: str) ->Optional[StorageCenter]:
+def _find_storage_center(session: DsmSession, instance_id: str) -> Optional[StorageCenter]:
     sc = session.storage_centers().find_by_instance_id(instance_id)
     if sc is None:
         print("Failed to find storage center with instance ID '%s'. Try listing all storage "
@@ -97,12 +97,12 @@ def _find_storage_center(session: DsmSession, instance_id: str) ->Optional[Stora
         return sc  # type: ignore
 
 
-def exit_cli(session: DsmSession, return_code: int) ->None:
+def exit_cli(session: DsmSession, return_code: int) -> None:
     session.logout(silent=True)
     exit(return_code)
 
 
-def parse_arguments() ->argparse.Namespace:
+def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     # General options
@@ -163,8 +163,7 @@ def parse_arguments() ->argparse.Namespace:
     return parser.parse_args()
 
 
-def execute_command(args: argparse.Namespace, session: DsmSession) ->int:
-
+def execute_command(args: argparse.Namespace, session: DsmSession) -> int:
     # Volume commands
     if args.command == CMD_CONST_VOLUME:
         # Create Volume

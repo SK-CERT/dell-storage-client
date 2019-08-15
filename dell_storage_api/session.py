@@ -84,7 +84,7 @@ class DsmSession:
             print("ERROR: Login failed (%d) - %s" % (resp.status_code, resp.text))
         return success
 
-    def logout(self, silent: bool=False) -> None:
+    def logout(self, silent: bool = False) -> None:
         resp = self.session.post(url=self.logout_url)
         if resp.status_code == 204:
             if not silent:
