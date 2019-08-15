@@ -1,7 +1,8 @@
 from collections import Iterable
-from typing import Optional, Iterator, List, Dict
-from requests import Session
 from typing import Any
+from typing import Optional, Iterator, List, Dict
+
+from requests import Session
 
 
 class StorageObject:

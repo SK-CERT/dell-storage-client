@@ -1,9 +1,9 @@
-import json
+from typing import Optional
+
 import requests
 import urllib3
 from requests.auth import HTTPBasicAuth
 from requests.structures import CaseInsensitiveDict
-from typing import Optional
 
 from dell_storage_api.storage_center import StorageCenter, StorageCenterCollection
 

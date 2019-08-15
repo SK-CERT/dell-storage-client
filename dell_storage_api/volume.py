@@ -1,5 +1,6 @@
-from requests import Session
 from typing import Dict, Any
+
+from requests import Session
 
 from dell_storage_api.storage_object import StorageObject, StorageObjectCollection, StorageObjectFolder
 

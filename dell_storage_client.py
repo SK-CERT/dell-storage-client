@@ -1,8 +1,10 @@
-from dell_storage_api import DsmSession, StorageCenter
-from typing import Optional
-from texttable import Texttable
 import argparse
 import getpass
+from typing import Optional
+
+from texttable import Texttable
+
+from dell_storage_api import DsmSession, StorageCenter
 
 CMD_CONST_VOLUME = 'volume'
 CMD_CONST_VOLUME_CREATE = 'create'
