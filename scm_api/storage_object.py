@@ -83,6 +83,6 @@ class StorageObjectFolderCollection(StorageObjectCollection):
     def find_by_parent_id(self, parent_id: str) -> 'StorageObjectFolderCollection':
         result = StorageObjectFolderCollection()
         for server_folder in self:
-            if server_folder.instance_id == parent_id:
+            if server_folder.parent_id == parent_id:
                 result.add(server_folder)
         return result
