@@ -1,7 +1,7 @@
 from requests import Session
 from typing import Dict, Any
 
-from scm_api.storage_object import StorageObject, StorageObjectCollection, StorageObjectFolder
+from dell_storage_api.storage_object import StorageObject, StorageObjectCollection, StorageObjectFolder
 
 
 class Volume(StorageObject):

@@ -1,1 +1,1 @@
-from scm_api import ScmSession
+from dell_storage_api import DsmSession

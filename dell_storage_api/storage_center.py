@@ -1,8 +1,8 @@
 import requests
 from typing import Any
 
-from scm_api.storage_object import *
-from scm_api.volume import Volume, VolumeCollection, VolumeFolder
+from dell_storage_api.storage_object import *
+from dell_storage_api.volume import Volume, VolumeCollection, VolumeFolder
 
 
 class StorageCenter(StorageObject):

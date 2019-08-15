@@ -5,10 +5,11 @@ from requests.auth import HTTPBasicAuth
 from requests.structures import CaseInsensitiveDict
 from typing import Optional
 
-from scm_api.storage_center import StorageCenter, StorageCenterCollection
+from dell_storage_api.storage_center import StorageCenter, StorageCenterCollection
 
 
-class ScmSession:
+# Dell Storage Manager session
+class DsmSession:
     API_VERSION_HEADER = 'x-dell-api-verions'
     LOGIN_ENDPOINT = '/ApiConnection/Login'
     LOGOUT_ENDPOINT = '/ApiConnection/Logout'

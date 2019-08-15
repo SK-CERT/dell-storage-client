@@ -1,4 +1,4 @@
-from scm_api import ScmSession, StorageCenter
+from dell_storage_api import DsmSession, StorageCenter
 from typing import Optional
 from texttable import Texttable
 import argparse
@@ -72,7 +72,7 @@ def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent
         return ReturnCode.FAILURE
 
 
-def storage_center_list(session: ScmSession) ->int:
+def storage_center_list(session: DsmSession) ->int:
     storage_centers = session.storage_centers()
     table = Texttable()
     table.header(["Name", "IP", "Instance ID", "Serial"])
@@ -85,7 +85,7 @@ def storage_center_list(session: ScmSession) ->int:
     return ReturnCode.SUCCESS
 
 
-def _find_storage_center(session: ScmSession, instance_id: str) ->Optional[StorageCenter]:
+def _find_storage_center(session: DsmSession, instance_id: str) ->Optional[StorageCenter]:
     sc = session.storage_centers().find_by_instance_id(instance_id)
     if sc is None:
         print("Failed to find storage center with instance ID '%s'. Try listing all storage "
@@ -95,7 +95,7 @@ def _find_storage_center(session: ScmSession, instance_id: str) ->Optional[Stora
         return sc  # type: ignore
 
 
-def exit_cli(session: ScmSession, return_code: int) ->None:
+def exit_cli(session: DsmSession, return_code: int) ->None:
     session.logout(silent=True)
     exit(return_code)
 
@@ -161,7 +161,7 @@ def parse_arguments() ->argparse.Namespace:
     return parser.parse_args()
 
 
-def execute_command(args: argparse.Namespace, session: ScmSession) ->int:
+def execute_command(args: argparse.Namespace, session: DsmSession) ->int:
 
     # Volume commands
     if args.command == CMD_CONST_VOLUME:
@@ -233,7 +233,7 @@ if __name__ == '__main__':
         cli_args.password = getpass.getpass()
 
     # Initialize Session with Storage controller
-    scm_session = ScmSession(cli_args.user, cli_args.password, cli_args.host, cli_args.port, verify_cert=False)
+    scm_session = DsmSession(cli_args.user, cli_args.password, cli_args.host, cli_args.port, verify_cert=False)
     if not scm_session.login():
         exit(ReturnCode.SUCCESS)
 
