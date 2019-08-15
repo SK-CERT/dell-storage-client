@@ -32,7 +32,7 @@ def volume_create(storage: StorageCenter, name: str, size: str,
         return ReturnCode.FAILURE
 
 
-def volume_list(storage: StorageCenter, folder_id: '') ->int:
+def volume_list(storage: StorageCenter, folder_id: str='') ->int:
     table = Texttable(max_width=120)
     all_volumes = storage.volume_list()
     if folder_id:
@@ -46,7 +46,7 @@ def volume_list(storage: StorageCenter, folder_id: '') ->int:
     return ReturnCode.SUCCESS
 
 
-def volume_folder_list(storage: StorageCenter, parent_id='') ->int:
+def volume_folder_list(storage: StorageCenter, parent_id: str='') ->int:
     # TODO: Adaptable table width
     table = Texttable(max_width=120)
     table.header(['Folder', 'Instance ID', 'Parent Instance ID'])
@@ -92,7 +92,7 @@ def _find_storage_center(session: ScmSession, instance_id: str) ->Optional[Stora
               "centers with command 'storage_center list'" % cli_args.storage_id)
         return None
     else:
-        return sc
+        return sc  # type: ignore
 
 
 def exit_cli(session: ScmSession, return_code: int) ->None:
