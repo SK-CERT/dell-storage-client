@@ -1,2 +1,4 @@
 requests
 texttable
+pylint
+mypy
