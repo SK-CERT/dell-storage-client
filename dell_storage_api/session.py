@@ -1,7 +1,7 @@
 from typing import Optional
 
-import requests
 import urllib3
+import requests
 from requests.auth import HTTPBasicAuth
 from requests.structures import CaseInsensitiveDict
 
@@ -101,13 +101,13 @@ class DsmSession:
         else:
             resp = self.session.get(url=url)
             if resp.status_code == 200:
-                for sc in resp.json():
+                for storage_center in resp.json():
                     storage_centers.add(StorageCenter(req_session=self.session,
                                                       base_url=self.base_url,
-                                                      name=sc['name'],
-                                                      instance_id=sc['instanceId'],
-                                                      serial_num=sc['scSerialNumber'],
-                                                      ip_addr=sc['hostOrIpAddress']))
+                                                      name=storage_center['name'],
+                                                      instance_id=storage_center['instanceId'],
+                                                      serial_num=storage_center['scSerialNumber'],
+                                                      ip_addr=storage_center['hostOrIpAddress']))
 
             else:
                 print("ERROR: Failed to load Storage Center list (%d) - %s" % (resp.status_code, resp.text))

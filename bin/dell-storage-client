@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+# pylint: disable=C0103
 import argparse
 import getpass
 from typing import Optional
@@ -20,7 +21,7 @@ CMD_CONST_STORAGE_CENTER = 'storage_center'
 CMD_CONST_STORAGE_CENTER_LIST = 'list'
 
 
-class ReturnCode:
+class ReturnCode:  # pylint: disable=R0903
     SUCCESS = 0
     FAILURE = 1
 
@@ -82,21 +83,24 @@ def storage_center_list(session: DsmSession) -> int:
     table.header(["Name", "IP", "Instance ID", "Serial"])
     table.set_cols_dtype(['t', 't', 't', 't'])
 
-    for sc in storage_centers:
-        table.add_row([sc.name, sc.ip_addr, sc.instance_id, sc.serial_num])
+    for storage_center in storage_centers:
+        table.add_row([storage_center.name,
+                       storage_center.ip_addr,
+                       storage_center.instance_id,
+                       storage_center.serial_num])
     print(table.draw())
 
     return ReturnCode.SUCCESS
 
 
 def _find_storage_center(session: DsmSession, instance_id: str) -> Optional[StorageCenter]:
-    sc = session.storage_centers().find_by_instance_id(instance_id)
-    if sc is None:
+    storage_center = session.storage_centers().find_by_instance_id(instance_id)
+    if storage_center is None:
         print("Failed to find storage center with instance ID '%s'. Try listing all storage "
-              "centers with command 'storage_center list'" % cli_args.storage_id)
+              "centers with command 'storage_center list'" % instance_id)
         return None
     else:
-        return sc  # type: ignore
+        return storage_center  # type: ignore
 
 
 def exit_cli(session: DsmSession, return_code: int) -> None:
@@ -165,66 +169,66 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def execute_command(args: argparse.Namespace, session: DsmSession) -> int:
+def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # pylint: disable=R0912
     # Volume commands
     if args.command == CMD_CONST_VOLUME:
         # Create Volume
         if args.volume_commands == CMD_CONST_VOLUME_CREATE:
             unique_name = not args.non_unique_name
-            sc = _find_storage_center(session, args.storage_id)
-            if sc is None:
-                rc = ReturnCode.FAILURE
+            storage_center = _find_storage_center(session, args.storage_id)
+            if storage_center is None:
+                ret_code = ReturnCode.FAILURE
             else:
-                rc = volume_create(sc, args.name, args.size, unique_name)
+                ret_code = volume_create(storage_center, args.name, args.size, unique_name)
         # List Volumes
         elif args.volume_commands == CMD_CONST_VOLUME_LIST:
-            sc = _find_storage_center(session, args.storage_id)
-            if sc is None:
-                rc = ReturnCode.FAILURE
+            storage_center = _find_storage_center(session, args.storage_id)
+            if storage_center is None:
+                ret_code = ReturnCode.FAILURE
             else:
                 parent_id = args.folder_id or ''
-                rc = volume_list(sc, parent_id)
+                ret_code = volume_list(storage_center, parent_id)
         # Default branch
         else:
-            rc = ReturnCode.FAILURE
+            ret_code = ReturnCode.FAILURE
 
     # Storage Center commands
     elif args.command == CMD_CONST_STORAGE_CENTER:
         # List Storage Centers
         if args.storage_center_commands == CMD_CONST_STORAGE_CENTER_LIST:
-            rc = storage_center_list(session)
+            ret_code = storage_center_list(session)
         # Default branch
         else:
-            rc = ReturnCode.FAILURE
+            ret_code = ReturnCode.FAILURE
 
     # Volume Folder commands
     elif args.command == CMD_CONST_VOLUME_FOLDER:
         # List Volume folders
         if args.volume_folder_commands == CMD_CONST_VOLUME_FOLDER_LIST:
-            sc = _find_storage_center(session, args.storage_id)
-            if sc is None:
-                rc = ReturnCode.FAILURE
+            storage_center = _find_storage_center(session, args.storage_id)
+            if storage_center is None:
+                ret_code = ReturnCode.FAILURE
             else:
                 parent_folder_id = args.folder_id or ''
-                rc = volume_folder_list(sc, parent_folder_id)
+                ret_code = volume_folder_list(storage_center, parent_folder_id)
         # Create volume folder
         elif args.volume_folder_commands == CMD_CONST_VOLUME_FOLDER_CREATE:
             unique_name = not args.non_unique_name
-            sc = _find_storage_center(session, args.storage_id)
-            if sc is None:
-                rc = ReturnCode.FAILURE
+            storage_center = _find_storage_center(session, args.storage_id)
+            if storage_center is None:
+                ret_code = ReturnCode.FAILURE
             else:
-                rc = volume_folder_create(sc, args.name, args.folder_id, unique_name)
+                ret_code = volume_folder_create(storage_center, args.name, args.folder_id, unique_name)
         # Default branch
         else:
-            rc = ReturnCode.FAILURE
+            ret_code = ReturnCode.FAILURE
     else:
-        rc = ReturnCode.FAILURE
+        ret_code = ReturnCode.FAILURE
 
-    return rc
+    return ret_code
 
 
-if __name__ == '__main__':
+def main():
     # parse CLI arguments
     cli_args = parse_arguments()
 
@@ -240,5 +244,9 @@ if __name__ == '__main__':
     if not scm_session.login():
         exit(ReturnCode.SUCCESS)
 
-    ret_code = execute_command(cli_args, scm_session)
-    exit_cli(scm_session, ret_code)
+    success = execute_command(cli_args, scm_session)
+    exit_cli(scm_session, success)
+
+
+if __name__ == '__main__':
+    main()

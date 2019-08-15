@@ -212,7 +212,7 @@ class VolumeFolder(StorageObjectFolder):
 
     def move_to_folder(self, parent_folder_id: str) -> bool:
         if self._modify_volume_folder({"VolumeFolder": parent_folder_id}):
-            self.parent_folder_id = parent_folder_id
+            self.parent_id = parent_folder_id
             return True
         else:
             return False

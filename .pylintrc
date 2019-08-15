@@ -1,0 +1,8 @@
+[MESSAGE CONTROLL]
+disable=R1705,R0913,R0902
+
+[FORMAT]
+max-line-length=120
+
+[REPORTS]
+output-format=colorized

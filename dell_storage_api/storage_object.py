@@ -47,7 +47,7 @@ class StorageObjectCollection(Iterable):
         return self._store.values().__iter__()
 
     def __bool__(self) -> bool:
-        return True if self._store else False
+        return bool(self._store)
 
     def __len__(self) -> int:
         return len(self._store)
@@ -77,9 +77,11 @@ class StorageObjectFolderCollection(StorageObjectCollection):
     def root_folder(self) -> Optional[StorageObjectFolder]:
         for folder in self:
             if folder.is_root:
-                return folder
+                root = folder
+                break
         else:
-            return None
+            root = None
+        return root
 
     def find_by_parent_id(self, parent_id: str) -> 'StorageObjectFolderCollection':
         result = StorageObjectFolderCollection()
