@@ -1,14 +1,17 @@
-from dell_storage_api.storage_object import StorageObject, StorageObjectCollection
-from requests import Session
 from typing import Dict, Any
+
+from requests import Session
+
+from dell_storage_api.storage_object import StorageObject, StorageObjectCollection
 
 
 class Server(StorageObject):
-    TYPE_PHYSICAL_SERVER= 'ScPhysicalServer'
+
+    TYPE_PHYSICAL_SERVER = 'ScPhysicalServer'
     TYPE_SERVER_CLUSTER = 'ScServerCluster'
 
     def __init__(self, req_session: Session, base_url: str, name: str,
-                 instance_id: str, object_type: str) ->None:
+                 instance_id: str, object_type: str) -> None:
         super(Server, self).__init__(req_session=req_session, base_url=base_url, name=name, instance_id=instance_id)
         self.type = object_type
 

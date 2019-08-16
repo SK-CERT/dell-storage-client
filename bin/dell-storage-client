@@ -59,7 +59,7 @@ SERVER_TYPES = ServerType()
 
 
 def volume_create(storage: StorageCenter, name: str, size: str,
-                  unique_name: bool = True, folder_id: str = '', map_to_id: str='') -> int:
+                  unique_name: bool = True, folder_id: str = '', map_to_id: str = '') -> int:
     if map_to_id:
         mapping_server = storage.server_list().find_by_instance_id(map_to_id)
         if mapping_server is None:
@@ -190,7 +190,7 @@ def exit_cli(session: DsmSession, return_code: int) -> None:
     exit(return_code)
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_arguments() -> argparse.Namespace:  # pylint: disable=R0914
     parser = argparse.ArgumentParser()
 
     # General options
@@ -232,10 +232,10 @@ def parse_arguments() -> argparse.Namespace:
     # Map Volume
     volume_map_args = volume_parser_cmd.add_parser(CMD_CONST_VOLUME_MAP)
     volume_map_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
-                                  help='Instance ID of storage center where volume is located')
+                                 help='Instance ID of storage center where volume is located')
     volume_map_args.add_argument('-v', '--volume-id', dest='volume_id', help='Instance ID of volume to be mapped')
     volume_map_args.add_argument('-m' '--map-to-server', dest='map_to_server',
-                                  help='Instance ID of server to which this volume will be mapped')
+                                 help='Instance ID of server to which this volume will be mapped')
 
     # Volume Folder subcommands
     volume_folder_parser = command_parser.add_parser('volume_folder')
@@ -264,13 +264,14 @@ def parse_arguments() -> argparse.Namespace:
     # List Servers
     server_list_args = server_parser_cmd.add_parser(CMD_CONST_SERVER_LIST)
     server_list_args.add_argument('-t', '--type', default=SERVER_TYPES.all_keyword, choices=SERVER_TYPES.all_types,
-                                  help='Print only server object of selected type. (Default=%s)' % SERVER_TYPES.all_keyword)
+                                  help='Print only server object of selected type. '
+                                       '(Default=%s)' % SERVER_TYPES.all_keyword)
     server_list_args.add_argument('-S' '--storage-id', required=True, dest='storage_id',
                                   help='Instance ID of storage center from which, servers will be listed')
     return parser.parse_args()
 
 
-def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # pylint: disable=R0912
+def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # pylint: disable=R0912,R0915
     # Volume commands
     if args.command == CMD_CONST_VOLUME:
         # Create Volume
