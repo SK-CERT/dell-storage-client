@@ -5,6 +5,7 @@ import requests
 from dell_storage_api.storage_object import StorageObject, StorageObjectFolder, StorageObjectCollection, \
     StorageObjectFolderCollection
 from dell_storage_api.volume import Volume, VolumeCollection, VolumeFolder
+from dell_storage_api.server import Server, ServerCollection
 
 
 class StorageCenter(StorageObject):
@@ -40,8 +41,13 @@ class StorageCenter(StorageObject):
     def server_folder_list(self) -> StorageObjectFolderCollection:
         return self._fetch_object_list(self.server_folder_list_url)
 
-    def server_list(self) -> StorageObjectCollection:
-        return self._fetch_object_list(self.server_list_url)
+    def server_list(self) -> ServerCollection:
+        result = ServerCollection()
+        for server_data in self._fetch_object_list(self.server_list_url):
+            result.add(Server.from_json(req_session=self.session,
+                                        base_url=self.base_url,
+                                        source_dict=server_data))
+        return result
 
     def volume_folder_list(self) -> StorageObjectFolderCollection:
         result = StorageObjectFolderCollection()

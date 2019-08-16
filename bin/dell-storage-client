@@ -3,7 +3,7 @@
 # pylint: disable=C0103
 import argparse
 import getpass
-from typing import Optional
+from typing import Optional, List
 
 from texttable import Texttable
 
@@ -20,10 +20,41 @@ CMD_CONST_VOLUME_FOLDER_LIST = 'list'
 CMD_CONST_STORAGE_CENTER = 'storage_center'
 CMD_CONST_STORAGE_CENTER_LIST = 'list'
 
+CMD_CONST_SERVER = 'server'
+CMD_CONST_SERVER_LIST = 'list'
+
 
 class ReturnCode:  # pylint: disable=R0903
     SUCCESS = 0
     FAILURE = 1
+
+
+class ServerType:
+
+    def __init__(self):
+        self._server = 'Server'
+        self._cluster = 'Cluster'
+        self._all = 'All'
+        self._all_types = [self._all, self._server, self._cluster]
+
+    @property
+    def server(self) -> str:
+        return self._server
+
+    @property
+    def cluster(self) -> str:
+        return self._cluster
+
+    @property
+    def all_keyword(self) -> str:
+        return self._all
+
+    @property
+    def all_types(self) -> List[str]:
+        return self._all_types
+
+
+SERVER_TYPES = ServerType()
 
 
 def volume_create(storage: StorageCenter, name: str, size: str,
@@ -75,6 +106,25 @@ def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent
         return ReturnCode.SUCCESS
     else:
         return ReturnCode.FAILURE
+
+
+def server_list(storage: StorageCenter, object_type: str) -> int:
+    table = Texttable(max_width=120)
+    table.header(['Server', 'Type', 'Instance ID'])
+    table.set_cols_dtype(['t', 't', 't'])
+
+    servers = storage.server_list()
+    if object_type == SERVER_TYPES.server:
+        servers = servers.filter_physical_servers()
+    elif object_type == SERVER_TYPES.cluster:
+        servers = servers.filter_clusters()
+
+    for server in servers:
+        table.add_row([server.name,
+                       server.pretty_type(),
+                       server.instance_id])
+    print(table.draw())
+    return ReturnCode.SUCCESS
 
 
 def storage_center_list(session: DsmSession) -> int:
@@ -166,6 +216,16 @@ def parse_arguments() -> argparse.Namespace:
     volume_folder_create_args.add_argument('-Q', '--non-unique-name', default=False, action='store_true',
                                            help='If this flag is present, folder creation wont fail if there is another'
                                                 ' folder with the same name in specified parent folder')
+
+    # Server subcommands
+    server_parser = command_parser.add_parser('server')
+    server_parser_cmd = server_parser.add_subparsers(dest='server_commands')
+    # List Servers
+    server_list_args = server_parser_cmd.add_parser(CMD_CONST_SERVER_LIST)
+    server_list_args.add_argument('-t', '--type', default=SERVER_TYPES.all_keyword, choices=SERVER_TYPES.all_types,
+                                  help='Print only server object of selected type. (Default=%s)' % SERVER_TYPES.all_keyword)
+    server_list_args.add_argument('-I' '--storage-id', required=True, dest='storage_id',
+                                  help='Instance ID of storage center from which, volume folders will be listed')
     return parser.parse_args()
 
 
@@ -220,6 +280,14 @@ def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # py
             else:
                 ret_code = volume_folder_create(storage_center, args.name, args.folder_id, unique_name)
         # Default branch
+        else:
+            ret_code = ReturnCode.FAILURE
+    # Server commands
+    elif args.command == CMD_CONST_SERVER:
+        # List servers
+        if args.server_commands == CMD_CONST_SERVER_LIST:
+            storage_center = _find_storage_center(session, args.storage_id)
+            ret_code = server_list(storage_center, args.type)
         else:
             ret_code = ReturnCode.FAILURE
     else:

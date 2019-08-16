@@ -19,6 +19,13 @@ class StorageObject:
     def build_url(self, endpoint_url: str) -> str:
         return self.base_url + endpoint_url % self.instance_id
 
+    @classmethod
+    def from_json(cls, req_session: Session, base_url: str, source_dict: Dict[Any, Any]) -> 'StorageObject':
+        return StorageObject(req_session=req_session,
+                             base_url=base_url,
+                             instance_id=source_dict['instanceId'],
+                             name=source_dict['name'])
+
 
 class StorageObjectFolder(StorageObject):
 
