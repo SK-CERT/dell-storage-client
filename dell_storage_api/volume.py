@@ -182,15 +182,15 @@ class VolumeFolder(StorageObjectFolder):
                             parent_id=source_dict.get('parent', {}).get('instanceId', None))
 
     @property
-    def modify_url(self):
+    def modify_url(self) -> str:
         return self.build_url(self.VOLUME_FOLDER_ENDPOINT)
 
     @property
-    def details_url(self):
+    def details_url(self) -> str:
         return self.build_url(self.VOLUME_FOLDER_ENDPOINT)
 
     @property
-    def delete_url(self):
+    def delete_url(self) -> str:
         return self.build_url(self.VOLUME_FOLDER_ENDPOINT)
 
     def _modify_volume_folder(self, payload: Dict[str, str]) -> bool:

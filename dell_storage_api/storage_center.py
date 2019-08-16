@@ -80,7 +80,13 @@ class StorageCenter(StorageObject):
                 return root_folder
 
     def new_volume_folder(self, name: str, parent_folder_id: str = '') -> Optional[VolumeFolder]:
-        parent_folder_id = parent_folder_id if parent_folder_id else self._find_volume_folder_root().instance_id
+        if not parent_folder_id:
+            parent_folder = self._find_volume_folder_root()
+            if parent_folder is not None:
+                parent_folder_id = parent_folder.instance_id
+            else:
+                print("Error: Failed to create new volume folder")
+                return None
         if parent_folder_id is None:
             print("Error: Failed to create new volume folder")
             return None
@@ -96,7 +102,13 @@ class StorageCenter(StorageObject):
             return None
 
     def new_volume(self, name: str, size: str, volume_folder_id: str = '') -> Optional[Volume]:
-        volume_folder_id = volume_folder_id if volume_folder_id else self._find_volume_folder_root().instance_id
+        if not volume_folder_id:
+            volume_folder = self._find_volume_folder_root()
+            if volume_folder is not None:
+                volume_folder_id = volume_folder.instance_id
+            else:
+                print("Error: Failed to create new volume")
+                return None
         if volume_folder_id is None:
             print("Error: Failed to create new volume")
             return None
