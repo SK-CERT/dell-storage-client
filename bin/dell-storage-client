@@ -13,6 +13,7 @@ CMD_CONST_VOLUME = 'volume'
 CMD_CONST_VOLUME_CREATE = 'create'
 CMD_CONST_VOLUME_LIST = 'list'
 CMD_CONST_VOLUME_MAP = 'map'
+CMD_CONST_VOLUME_UNMAP = 'unmap'
 
 CMD_CONST_VOLUME_FOLDER = 'volume_folder'
 CMD_CONST_VOLUME_FOLDER_CREATE = 'create'
@@ -95,6 +96,17 @@ def volume_map(storage: StorageCenter, volume_id: str, server_id: str) -> int:
                                                                                          server_id))
         return ReturnCode.FAILURE
     if volume.map_to_server(server_id=server_id):
+        return ReturnCode.SUCCESS
+    else:
+        return ReturnCode.FAILURE
+
+
+def volume_unmap(storage: StorageCenter, volume_id: str) -> int:
+    volume = storage.volume_list().find_by_instance_id(volume_id)
+    if volume is None:
+        print("Failed to unmap volume with ID '%s'. No such volume" % volume_id)
+        return ReturnCode.FAILURE
+    if volume.unmap():
         return ReturnCode.SUCCESS
     else:
         return ReturnCode.FAILURE
@@ -236,6 +248,11 @@ def parse_arguments() -> argparse.Namespace:  # pylint: disable=R0914
     volume_map_args.add_argument('-v', '--volume-id', dest='volume_id', help='Instance ID of volume to be mapped')
     volume_map_args.add_argument('-m' '--map-to-server', dest='map_to_server',
                                  help='Instance ID of server to which this volume will be mapped')
+    # Unmap Volume
+    volume_unmap_args = volume_parser_cmd.add_parser(CMD_CONST_VOLUME_UNMAP)
+    volume_unmap_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
+                                   help='Instance ID of storage center where volume is located')
+    volume_unmap_args.add_argument('-v', '--volume-id', dest='volume_id', help='Instance ID of volume to be unmapped')
 
     # Volume Folder subcommands
     volume_folder_parser = command_parser.add_parser('volume_folder')
@@ -297,6 +314,12 @@ def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # py
                 ret_code = ReturnCode.FAILURE
             else:
                 ret_code = volume_map(storage_center, args.volume_id, args.map_to_server)
+        elif args.volume_commands == CMD_CONST_VOLUME_UNMAP:
+            storage_center = _find_storage_center(session, args.storage_id)
+            if storage_center is None:
+                ret_code = ReturnCode.FAILURE
+            else:
+                ret_code = volume_unmap(storage_center, args.volume_id)
         # Default branch
         else:
             ret_code = ReturnCode.FAILURE
