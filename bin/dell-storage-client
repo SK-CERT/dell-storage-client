@@ -200,14 +200,14 @@ def parse_arguments() -> argparse.Namespace:
     volume_create_args.add_argument('-f', '--folder-id', dest='folder_id', help='Instance ID of parent folder')
     volume_create_args.add_argument('-m' '--map-to-server', dest='map_to_server',
                                     help='Instance ID of server to which new volume will be mapped')
-    volume_create_args.add_argument('-I', '--storage-id', required=True, dest='storage_id',
+    volume_create_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
                                     help='Instance ID of storage center where the volume will be created')
     volume_create_args.add_argument('-Q', '--non-unique-name', default=False, action='store_true',
                                     help='If this flag is present, volume creation wont fail if there is another '
                                          'volume with the same name')
     # List Volumes
     volume_list_args = volume_parser_cmd.add_parser(CMD_CONST_VOLUME_LIST)
-    volume_list_args.add_argument('-I', '--storage-id', required=True, dest='storage_id',
+    volume_list_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
                                   help='Instance ID of storage center where the volume will be created')
     volume_list_args.add_argument('-f', '--folder-id', dest='folder_id', help='Instance ID of folder from '
                                                                               'which the volumes will be listed')
@@ -217,7 +217,7 @@ def parse_arguments() -> argparse.Namespace:
     volume_folder_parser_cmd = volume_folder_parser.add_subparsers(dest='volume_folder_commands')
     # List volume folders
     volume_folder_list_args = volume_folder_parser_cmd.add_parser(CMD_CONST_VOLUME_FOLDER_LIST)
-    volume_folder_list_args.add_argument('-I' '--storage-id', required=True, dest='storage_id',
+    volume_folder_list_args.add_argument('-S' '--storage-id', required=True, dest='storage_id',
                                          help='Instance ID of storage center from which, volume folders will be listed')
     volume_folder_list_args.add_argument('-f', '--folder-id', dest='folder_id',
                                          help='Instance ID of folder from which the child volumes will be listed')
@@ -226,7 +226,7 @@ def parse_arguments() -> argparse.Namespace:
     volume_folder_create_args = volume_folder_parser_cmd.add_parser(CMD_CONST_VOLUME_FOLDER_CREATE)
     volume_folder_create_args.add_argument('-n', '--name', help='Name of the new folder')
     volume_folder_create_args.add_argument('-f', '--folder-id', dest='folder_id', help='Instance ID of parent folder')
-    volume_folder_create_args.add_argument('-I' '--storage-id', required=True, dest='storage_id',
+    volume_folder_create_args.add_argument('-S' '--storage-id', required=True, dest='storage_id',
                                            help='Instance ID of storage center from which,'
                                                 'volume folders will be listed')
     volume_folder_create_args.add_argument('-Q', '--non-unique-name', default=False, action='store_true',
@@ -240,7 +240,7 @@ def parse_arguments() -> argparse.Namespace:
     server_list_args = server_parser_cmd.add_parser(CMD_CONST_SERVER_LIST)
     server_list_args.add_argument('-t', '--type', default=SERVER_TYPES.all_keyword, choices=SERVER_TYPES.all_types,
                                   help='Print only server object of selected type. (Default=%s)' % SERVER_TYPES.all_keyword)
-    server_list_args.add_argument('-I' '--storage-id', required=True, dest='storage_id',
+    server_list_args.add_argument('-S' '--storage-id', required=True, dest='storage_id',
                                   help='Instance ID of storage center from which, volume folders will be listed')
     return parser.parse_args()
 
