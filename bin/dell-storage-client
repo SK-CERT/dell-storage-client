@@ -58,12 +58,26 @@ SERVER_TYPES = ServerType()
 
 
 def volume_create(storage: StorageCenter, name: str, size: str,
-                  unique_name: bool = True, folder_id: str = '') -> int:
+                  unique_name: bool = True, folder_id: str = '', map_to_id: str='') -> int:
+    if map_to_id:
+        mapping_server = storage.server_list().find_by_instance_id(map_to_id)
+        if mapping_server is None:
+            print("Volume can't be mapped to server with instance ID '%s'. No such server" % map_to_id)
+            return ReturnCode.FAILURE
     if unique_name and storage.volume_list().find_by_name(name):
         print("Volume with name '%s' already exists" % name)
         return ReturnCode.FAILURE
-    if storage.new_volume(name, size, folder_id):
-        return ReturnCode.SUCCESS
+
+    new_volume = storage.new_volume(name, size, folder_id)
+    print("OK - Volume '%s' created with instance ID '%s'" % (new_volume.name, new_volume.instance_id))
+    if new_volume:
+        if map_to_id:
+            if new_volume.map_to_server(map_to_id):
+                return ReturnCode.SUCCESS
+            else:
+                return ReturnCode.FAILURE
+        else:
+            return ReturnCode.SUCCESS
     else:
         return ReturnCode.FAILURE
 
@@ -184,6 +198,8 @@ def parse_arguments() -> argparse.Namespace:
     volume_create_args.add_argument('-s', '--size', required=True, help='Size of the new volume. Example: "500GB"')
     volume_create_args.add_argument('-n', '--name', required=True, help='Name of the new volume')
     volume_create_args.add_argument('-f', '--folder-id', dest='folder_id', help='Instance ID of parent folder')
+    volume_create_args.add_argument('-m' '--map-to-server', dest='map_to_server',
+                                    help='Instance ID of server to which new volume will be mapped')
     volume_create_args.add_argument('-I', '--storage-id', required=True, dest='storage_id',
                                     help='Instance ID of storage center where the volume will be created')
     volume_create_args.add_argument('-Q', '--non-unique-name', default=False, action='store_true',
@@ -239,7 +255,8 @@ def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # py
             if storage_center is None:
                 ret_code = ReturnCode.FAILURE
             else:
-                ret_code = volume_create(storage_center, args.name, args.size, unique_name)
+                ret_code = volume_create(storage=storage_center, name=args.name, size=args.size,
+                                         unique_name=unique_name, map_to_id=args.map_to_server)
         # List Volumes
         elif args.volume_commands == CMD_CONST_VOLUME_LIST:
             storage_center = _find_storage_center(session, args.storage_id)

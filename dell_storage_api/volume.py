@@ -67,7 +67,7 @@ class Volume(StorageObject):
         resp = self.session.post(self.mapping_url, json=payload)
         if resp.status_code == 200:
             success = True
-            print("OK - Volume mapped successfully")
+            print("OK - Volume '%s' (%s) sucessfully mapped to server." % (self.name, self.instance_id))
         else:
             print("Error: Failed to map volume - %s" % resp.json().get('result'))
         return success
