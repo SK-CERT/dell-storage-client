@@ -12,6 +12,7 @@ from dell_storage_api import DsmSession, StorageCenter
 CMD_CONST_VOLUME = 'volume'
 CMD_CONST_VOLUME_CREATE = 'create'
 CMD_CONST_VOLUME_LIST = 'list'
+CMD_CONST_VOLUME_MAP = 'map'
 
 CMD_CONST_VOLUME_FOLDER = 'volume_folder'
 CMD_CONST_VOLUME_FOLDER_CREATE = 'create'
@@ -78,6 +79,23 @@ def volume_create(storage: StorageCenter, name: str, size: str,
                 return ReturnCode.FAILURE
         else:
             return ReturnCode.SUCCESS
+    else:
+        return ReturnCode.FAILURE
+
+
+def volume_map(storage: StorageCenter, volume_id: str, server_id: str) -> int:
+    volume = storage.volume_list().find_by_instance_id(volume_id)
+    if volume is None:
+        print("Failed to map volume with ID '%s'. No such volume" % volume_id)
+        return ReturnCode.FAILURE
+    server = storage.server_list().find_by_instance_id(server_id)
+    if server is None:
+        print("failed to map volume '%s' (%s) to server with ID '%s'. No such server" % (volume.name,
+                                                                                         volume.instance_id,
+                                                                                         server_id))
+        return ReturnCode.FAILURE
+    if volume.map_to_server(server_id=server_id):
+        return ReturnCode.SUCCESS
     else:
         return ReturnCode.FAILURE
 
@@ -208,9 +226,16 @@ def parse_arguments() -> argparse.Namespace:
     # List Volumes
     volume_list_args = volume_parser_cmd.add_parser(CMD_CONST_VOLUME_LIST)
     volume_list_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
-                                  help='Instance ID of storage center where the volume will be created')
+                                  help='Instance ID of storage center from which the volumes will be listed')
     volume_list_args.add_argument('-f', '--folder-id', dest='folder_id', help='Instance ID of folder from '
                                                                               'which the volumes will be listed')
+    # Map Volume
+    volume_map_args = volume_parser_cmd.add_parser(CMD_CONST_VOLUME_MAP)
+    volume_map_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
+                                  help='Instance ID of storage center where volume is located')
+    volume_map_args.add_argument('-v', '--volume-id', dest='volume_id', help='Instance ID of volume to be mapped')
+    volume_map_args.add_argument('-m' '--map-to-server', dest='map_to_server',
+                                  help='Instance ID of server to which this volume will be mapped')
 
     # Volume Folder subcommands
     volume_folder_parser = command_parser.add_parser('volume_folder')
@@ -241,7 +266,7 @@ def parse_arguments() -> argparse.Namespace:
     server_list_args.add_argument('-t', '--type', default=SERVER_TYPES.all_keyword, choices=SERVER_TYPES.all_types,
                                   help='Print only server object of selected type. (Default=%s)' % SERVER_TYPES.all_keyword)
     server_list_args.add_argument('-S' '--storage-id', required=True, dest='storage_id',
-                                  help='Instance ID of storage center from which, volume folders will be listed')
+                                  help='Instance ID of storage center from which, servers will be listed')
     return parser.parse_args()
 
 
@@ -265,6 +290,12 @@ def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # py
             else:
                 parent_id = args.folder_id or ''
                 ret_code = volume_list(storage_center, parent_id)
+        elif args.volume_commands == CMD_CONST_VOLUME_MAP:
+            storage_center = _find_storage_center(session, args.storage_id)
+            if storage_center is None:
+                ret_code = ReturnCode.FAILURE
+            else:
+                ret_code = volume_map(storage_center, args.volume_id, args.map_to_server)
         # Default branch
         else:
             ret_code = ReturnCode.FAILURE
