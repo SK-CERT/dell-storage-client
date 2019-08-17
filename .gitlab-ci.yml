@@ -4,13 +4,17 @@ before_script:
     - pip install .
     
 pylint_lib:
-    - pylint ./dell_storage_api
+    script:
+        - pylint ./dell_storage_api
 
 pylint_bin:
+    script:
     - pylint ./bin/dell-storage-client
 
 mypy_lib:
+    script:
     - mypy ./dell_storage_api
 
 mypy_bin:
+    script:
     - mypy ./bin/dell-storage-client
