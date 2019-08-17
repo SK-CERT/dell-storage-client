@@ -1,0 +1,16 @@
+image: "python:3.6-buster"
+
+before_script:
+    - pip install .
+    
+pylint lib:
+    - pylint ./dell_storage_api
+
+pylint bin:
+    - pylint ./bin/dell-storage-client
+
+mypy lib:
+    - mypy ./dell_storage_api
+
+mypy bin:
+    - mypy ./bin/dell-storage-client
