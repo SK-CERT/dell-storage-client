@@ -1,7 +1,7 @@
 image: "python:3.6-buster"
 
 before_script:
-    - pip install .
+    - https_proxy=http//proxy.int.sk-cert.sk:3128/ pip install .
     
 pylint_lib:
     script:
