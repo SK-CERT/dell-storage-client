@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# pylint: disable=C0103
+# pylint: disable=C0103,C0111
 import argparse
 import getpass
 from typing import Optional, List
@@ -27,11 +27,13 @@ CMD_CONST_SERVER_LIST = 'list'
 
 
 class ReturnCode:  # pylint: disable=R0903
+    """Convenience class that holds semantic return codes """
     SUCCESS = 0
     FAILURE = 1
 
 
 class ServerType:
+    """Convenience class that represents various types of Server object"""
 
     def __init__(self) -> None:
         self._server = 'Server'
@@ -41,18 +43,34 @@ class ServerType:
 
     @property
     def server(self) -> str:
+        """
+        Return string representing Physical server type
+        :return: Physical server type
+        """
         return self._server
 
     @property
     def cluster(self) -> str:
+        """
+        Return string representing Custer server type
+        :return: Cluster server type
+        """
         return self._cluster
 
     @property
     def all_keyword(self) -> str:
+        """
+        Return list of all possible server type keywords (including magic keyword 'All')
+        :return: list of all server type keywords
+        """
         return self._all
 
     @property
     def all_types(self) -> List[str]:
+        """
+        Magic keyword representing all/any server types
+        :return: keyword representing all types
+        """
         return self._all_types
 
 
@@ -61,6 +79,16 @@ SERVER_TYPES = ServerType()
 
 def volume_create(storage: StorageCenter, name: str, size: str,
                   unique_name: bool = True, folder_id: str = '', map_to_id: str = '') -> int:
+    """
+    Create new volume in Storage Center.
+    :param storage: Storage Center in which new volume will be created
+    :param name: Name of the volume
+    :param size: Size of the volume (e.g.: '500GB' or '1.5TB')
+    :param unique_name: Should the volume creation fail if the valoume name already exists in this folder ?
+    :param folder_id: Folder in which the volume will be created (Defaults to root folder)
+    :param map_to_id: Instance ID of a server (or cluster) to which this volume should be mapped
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     if map_to_id:
         mapping_server = storage.server_list().find_by_instance_id(map_to_id)
         if mapping_server is None:
@@ -85,6 +113,14 @@ def volume_create(storage: StorageCenter, name: str, size: str,
 
 
 def volume_map(storage: StorageCenter, volume_id: str, server_id: str) -> int:
+    """
+    Map existing volume to the server (or cluster).
+    NOTE: Volume that is already mapped to server can not be mapped again without unmapping it first.
+    :param storage: Storage Center where the volume is located
+    :param volume_id: Instance ID of a Volume to be mapped
+    :param server_id: Instance ID of a Server (or a cluster) to which volume will be mapped
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     volume = storage.volume_list().find_by_instance_id(volume_id)
     if volume is None:
         print("Failed to map volume with ID '%s'. No such volume" % volume_id)
@@ -102,6 +138,12 @@ def volume_map(storage: StorageCenter, volume_id: str, server_id: str) -> int:
 
 
 def volume_unmap(storage: StorageCenter, volume_id: str) -> int:
+    """
+    Unmap volume from all servers it is currently mapped to
+    :param storage: Storage Center where volume is located
+    :param volume_id: Instance ID of a volume to be unampped
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     volume = storage.volume_list().find_by_instance_id(volume_id)
     if volume is None:
         print("Failed to unmap volume with ID '%s'. No such volume" % volume_id)
@@ -113,6 +155,12 @@ def volume_unmap(storage: StorageCenter, volume_id: str) -> int:
 
 
 def volume_list(storage: StorageCenter, folder_id: str = '') -> int:
+    """
+    Print table of Volumes present in Storage Center in specified volume folder.
+    :param storage: Storage Center, from which to list volumes
+    :param folder_id: Volume Folder, from which to list volumes (Defaults to root)
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     table = Texttable(max_width=120)
     all_volumes = storage.volume_list()
     if folder_id:
@@ -127,6 +175,12 @@ def volume_list(storage: StorageCenter, folder_id: str = '') -> int:
 
 
 def volume_folder_list(storage: StorageCenter, parent_id: str = '') -> int:
+    """
+    Print table of Volume Folders present in Storage Center in specified parent Volume Folder
+    :param storage: Storage Center, from which to list volume folders
+    :param parent_id: Parent volume folder, from which the child volume folders will be listed (Defaults to root)
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     # TODO: Adaptable table width
     table = Texttable(max_width=120)
     table.header(['Folder', 'Instance ID', 'Parent Instance ID'])
@@ -143,6 +197,14 @@ def volume_folder_list(storage: StorageCenter, parent_id: str = '') -> int:
 
 def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent_id: str = '',
                          unique_name: bool = True) -> int:
+    """
+    Create new volume folder in Storage Center
+    :param storage: Storage Center where the new folder will be created
+    :param folder_name: Name of the new folder
+    :param folder_parent_id: Instance ID of a parent folder for the new volume folder
+    :param unique_name: Should the volume creation fail if volume with same name already exists within parent folder
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     if unique_name and storage.volume_folder_list().find_by_name(folder_name):
         print("Volume folder with name '%s' already exists" % folder_name)
         return ReturnCode.FAILURE
@@ -153,6 +215,13 @@ def volume_folder_create(storage: StorageCenter, folder_name: str, folder_parent
 
 
 def server_list(storage: StorageCenter, object_type: str) -> int:
+    """
+    Print table of Servers defined in Storage Center.
+    :param storage: Storage Center from which servers will be listed
+    :param object_type: Limit output only to Servers of specific
+           type (e.g.: SERVER_TYPES.server or SERVER_TYPES.cluster)
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     table = Texttable(max_width=120)
     table.header(['Server', 'Type', 'Instance ID'])
     table.set_cols_dtype(['t', 't', 't'])
@@ -172,6 +241,11 @@ def server_list(storage: StorageCenter, object_type: str) -> int:
 
 
 def storage_center_list(session: DsmSession) -> int:
+    """
+    Print table of Storage Centers connected to Dell Storage Manager
+    :param session: Authenticated session with Dell Storage Manager
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
+    """
     storage_centers = session.storage_centers()
     table = Texttable()
     table.header(["Name", "IP", "Instance ID", "Serial"])
@@ -188,6 +262,13 @@ def storage_center_list(session: DsmSession) -> int:
 
 
 def _find_storage_center(session: DsmSession, instance_id: str) -> Optional[StorageCenter]:
+    """
+    Find and return Storage Center with specified Instance ID connected to Dell Storage manager. If no such
+    Storage Center is found, return None.
+    :param session: Authenticated session with Dell Storage Manager
+    :param instance_id: Instance ID of a Storage Center that should be returned
+    :return: Storage Center with Given Instance ID or None if no such ID is found
+    """
     storage_center = session.storage_centers().find_by_instance_id(instance_id)
     if storage_center is None:
         print("Failed to find storage center with instance ID '%s'. Try listing all storage "
@@ -198,11 +279,21 @@ def _find_storage_center(session: DsmSession, instance_id: str) -> Optional[Stor
 
 
 def exit_cli(session: DsmSession, return_code: int) -> None:
+    """
+    Perform Session logout and exit program
+    :param session: Session with Dell Storage Manager
+    :param return_code: Return Code to exit with
+    :return: None
+    """
     session.logout(silent=True)
     exit(return_code)
 
 
 def parse_arguments() -> argparse.Namespace:  # pylint: disable=R0914
+    """
+    Define and parse CLI commands, subcommands and arguments using argparse module
+    :return: argparse.Namespace with parsed CLI argument values
+    """
     parser = argparse.ArgumentParser()
 
     # General options
@@ -289,6 +380,12 @@ def parse_arguments() -> argparse.Namespace:  # pylint: disable=R0914
 
 
 def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # pylint: disable=R0912,R0915
+    """
+    Execute CLI command based on parsed arguments and parameters
+    :param args: Parsed argparse CLI arguments
+    :param session: Authenticated session with Dell Storage manager
+    :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a performed command
+    """
     # Volume commands
     if args.command == CMD_CONST_VOLUME:
         # Create Volume
