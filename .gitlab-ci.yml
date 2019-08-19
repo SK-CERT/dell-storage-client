@@ -1,20 +1,46 @@
 image: "python:3.6-buster"
 
 before_script:
-    - https_proxy=http//proxy.int.sk-cert.sk:3128/ pip install .
-    
-pylint_lib:
-    script:
-        - pylint ./dell_storage_api
+    - pip install --proxy http://proxy.int.sk-cert.sk:3128/ .
 
-pylint_bin:
-    script:
-    - pylint ./bin/dell-storage-client
+stages:
+    - Static Analysis
+    - Report
 
-mypy_lib:
+pylint:
+    stage: Static Analysis
     script:
-    - mypy ./dell_storage_api
+        - pylint ./dell_storage_api ./bin/dell-storage-client | tee pylint.txt
+    artifacts:
+        paths:
+            - pylint.txt
+        when: always
+    allow_failure: yes
 
-mypy_bin:
+mypy:
+    stage: Static Analysis
     script:
-    - mypy ./bin/dell-storage-client
+        - mypy ./dell_storage_api ./bin/dell-storage-client | tee mypy.txt
+    artifacts:
+        paths:
+            - mypy.txt
+        when: always
+    allow_failure: yes
+
+Generate badges:
+    only: 
+        - master
+    stage: Report
+    script:
+        - echo "Generating badges"
+    after_script:
+        - pip install --proxy http://proxy.int.sk-cert.sk:3128/ anybadge
+        - export PYLINT_SCORE=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint.txt)
+        - export MYPY_ERRORS=$(cat mypy.txt | wc -l)
+        - anybadge -l "pylint score" -v $PYLINT_SCORE -f pylint.svg 2=red 4=orange 8=yellow 10=green
+        - anybadge -l "mypy errors" -v $MYPY_ERRORS -f mypy.svg 0=green 1=yellow 5=orange 10=red
+    artifacts:
+        paths:
+            - pylint.svg
+            - mypy.svg
+        when: always
