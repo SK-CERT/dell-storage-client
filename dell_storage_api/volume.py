@@ -13,16 +13,18 @@ class Volume(StorageObject):
     ENDPOINT = '/StorageCenter/ScVolume'
     VOLUME_ENDPOINT = '/StorageCenter/ScVolume/%s'
     MAPPING_ENDPOINT = '/StorageCenter/ScVolume/%s/MapToServer'
+    MAPPING_PROFILE_ENDPOINT = '/StorageCenter/ScVolume/%s/MappingProfileList'
     UNMAPPING_ENDPOINT = '/StorageCenter/ScVolume/%s/Unmap'
     RECYCLE_ENDPOINT = '/StorageCenter/ScVolume/%s/Recycle'
     EXPAND_TO_SIZE_ENDPOINT = '/StorageCenter/ScVolume/%s/ExpandToSize'
     EXPAND_ENDPOINT = '/StorageCenter/ScVolume/%s/Expand'
 
     def __init__(self, req_session: Session, base_url: str, name: str, instance_id: str,
-                 parent_folder_id: str, wwid: str) -> None:
+              parent_folder_id: str, wwid: str, status: str) -> None:
         super().__init__(req_session, base_url, name, instance_id)
         self.parent_folder_id = parent_folder_id
         self.wwid = wwid
+        self.status = status
 
     @classmethod
     def from_json(cls, req_session: Session, base_url: str, source_dict: Dict[Any, Any]) -> 'Volume':
@@ -41,7 +43,9 @@ class Volume(StorageObject):
                       name=source_dict['name'],
                       instance_id=source_dict['instanceId'],
                       parent_folder_id=source_dict['volumeFolder']['instanceId'],
-                      wwid=source_dict['deviceId'])
+                      wwid=source_dict['deviceId'],
+                      status=source_dict['status']
+                      )
 
     @property
     def mapping_url(self) -> str:
@@ -58,6 +62,14 @@ class Volume(StorageObject):
         :return: URL for volume unmapping
         """
         return self.build_url(self.UNMAPPING_ENDPOINT)
+
+    @property
+    def mapping_profile_url(self) -> str:
+        """
+        Return complete URL to read mapping profile of this volume.
+        :return: URL for volume mapping list
+        """
+        return self.build_url(self.MAPPING_PROFILE_ENDPOINT)
 
     @property
     def recycle_url(self) -> str:
@@ -141,6 +153,20 @@ class Volume(StorageObject):
         else:
             print('Error: Failed to unamp volume - %s' % resp.text)
         return success
+
+    def mapping(self) -> object:
+        """
+        """
+        success = False
+        resp = self.session.get(self.mapping_profile_url)
+        if resp.status_code == 200:
+            success = True
+            mapping_profiles = resp.json()
+            if mapping_profiles:
+                return mapping_profiles[0]['server']
+        else:
+            print("Error: Failed to get volume mapping list")
+        return None
 
     def expand(self, size: str) -> bool:
         """

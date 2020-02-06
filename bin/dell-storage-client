@@ -25,7 +25,6 @@ CMD_CONST_STORAGE_CENTER_LIST = 'list'
 CMD_CONST_SERVER = 'server'
 CMD_CONST_SERVER_LIST = 'list'
 
-
 class ReturnCode:  # pylint: disable=R0903
     """Convenience class that holds semantic return codes """
     SUCCESS = 0
@@ -75,6 +74,22 @@ class ServerType:
 
 
 SERVER_TYPES = ServerType()
+
+def print_table(table):
+    cli_args = parse_arguments()
+
+    if cli_args.json:
+        res = []
+        for row in table._rows:
+            line = {}
+            for i in range(len(table._header)):
+                line[table._header[i]] = row[i]
+            res.append(line)
+        text = json.dumps(res)
+    else:
+        text = table.draw()
+
+    print (text)
 
 
 def volume_create(storage: StorageCenter, name: str, size: str,
@@ -154,7 +169,7 @@ def volume_unmap(storage: StorageCenter, volume_id: str) -> int:
         return ReturnCode.FAILURE
 
 
-def volume_list(storage: StorageCenter, folder_id: str = '') -> int:
+def volume_list(storage: StorageCenter, folder_id: str = '', show_mapping: bool = False) -> int:
     """
     Print table of Volumes present in Storage Center in specified volume folder.
     :param storage: Storage Center, from which to list volumes
@@ -165,11 +180,23 @@ def volume_list(storage: StorageCenter, folder_id: str = '') -> int:
     all_volumes = storage.volume_list()
     if folder_id:
         all_volumes = all_volumes.find_by_parent_folder(folder_id)
-    table.header(['Volume', 'Instance ID', 'Parent Folder', 'WWID'])
-    table.set_cols_dtype(['t', 't', 't', 't'])
+
+    if show_mapping:
+        table.header(['volume', 'instance_id', 'parent_folder', 'wwid', 'status', 'mapping'])
+        table.set_cols_dtype(['t', 't', 't', 't','t','t'])
+    else:
+        table.header(['volume', 'instance_id', 'parent_folder', 'wwid', 'status'])
+        table.set_cols_dtype(['t', 't', 't', 't','t'])
+
     for volume in all_volumes:
-        table.add_row([volume.name, volume.instance_id, volume.parent_folder_id, volume.wwid])
-    print(table.draw())
+        if show_mapping:
+            mapping = volume.mapping()
+            mapping_name = mapping['instanceName'] if mapping else None
+            table.add_row([volume.name, volume.instance_id, volume.parent_folder_id, volume.wwid, volume.status, mapping_name])
+        else:
+            table.add_row([volume.name, volume.instance_id, volume.parent_folder_id, volume.wwid, volume.status])
+
+    print_table(table)
 
     return ReturnCode.SUCCESS
 
@@ -190,7 +217,7 @@ def volume_folder_list(storage: StorageCenter, parent_id: str = '') -> int:
         folder_list = folder_list.find_by_parent_id(parent_id)
     for folder in folder_list:
         table.add_row([folder.name, folder.instance_id, folder.parent_id])
-    print(table.draw())
+    print_table(table)
 
     return ReturnCode.SUCCESS
 
@@ -236,7 +263,7 @@ def server_list(storage: StorageCenter, object_type: str) -> int:
         table.add_row([server.name,
                        server.pretty_type(),
                        server.instance_id])
-    print(table.draw())
+    print_table(table)
     return ReturnCode.SUCCESS
 
 
@@ -256,7 +283,7 @@ def storage_center_list(session: DsmSession) -> int:
                        storage_center.ip_addr,
                        storage_center.instance_id,
                        storage_center.serial_num])
-    print(table.draw())
+    print_table(table)
 
     return ReturnCode.SUCCESS
 
@@ -301,6 +328,7 @@ def parse_arguments() -> argparse.Namespace:  # pylint: disable=R0914
     parser.add_argument('-P', '--port', default=3033, help="Management port of Dell storage Center")
     parser.add_argument('-u', '--user', help='Login username')
     parser.add_argument('-p', '--password', help='Login password')
+    parser.add_argument('-j', '--json', action='store_true', help='Output in JSON format')
 
     # Top level subcommands
     command_parser = parser.add_subparsers(dest='command')
@@ -332,6 +360,9 @@ def parse_arguments() -> argparse.Namespace:  # pylint: disable=R0914
                                   help='Instance ID of storage center from which the volumes will be listed')
     volume_list_args.add_argument('-f', '--folder-id', dest='folder_id', help='Instance ID of folder from '
                                                                               'which the volumes will be listed')
+    volume_list_args.add_argument('-m', '--show-mapping', dest='show_mapping', action="store_true",
+                                  help='Show mapping profile (this will slow down things!)')
+
     # Map Volume
     volume_map_args = volume_parser_cmd.add_parser(CMD_CONST_VOLUME_MAP)
     volume_map_args.add_argument('-S', '--storage-id', required=True, dest='storage_id',
@@ -404,7 +435,8 @@ def execute_command(args: argparse.Namespace, session: DsmSession) -> int:  # py
                 ret_code = ReturnCode.FAILURE
             else:
                 parent_id = args.folder_id or ''
-                ret_code = volume_list(storage_center, parent_id)
+                show_mapping = args.show_mapping or False
+                ret_code = volume_list(storage_center, parent_id, show_mapping)
         elif args.volume_commands == CMD_CONST_VOLUME_MAP:
             storage_center = _find_storage_center(session, args.storage_id)
             if storage_center is None:
