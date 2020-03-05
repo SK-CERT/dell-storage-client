@@ -3,6 +3,7 @@
 # pylint: disable=C0103,C0111
 import argparse
 import getpass
+import json
 from typing import Optional, List
 
 from texttable import Texttable
@@ -210,7 +211,7 @@ def volume_folder_list(storage: StorageCenter, parent_id: str = '') -> int:
     """
     # TODO: Adaptable table width
     table = Texttable(max_width=120)
-    table.header(['Folder', 'Instance ID', 'Parent Instance ID'])
+    table.header(['folder', 'instance_id', 'parent_instance_id'])
     table.set_cols_dtype(['t', 't', 't'])
     folder_list = storage.volume_folder_list()
     if parent_id:
@@ -250,7 +251,7 @@ def server_list(storage: StorageCenter, object_type: str) -> int:
     :return: ReturnCode.SUCCESS or ReturnCode.FAILURE based on the outcome of a operation
     """
     table = Texttable(max_width=120)
-    table.header(['Server', 'Type', 'Instance ID'])
+    table.header(['server', 'type', 'instance_id'])
     table.set_cols_dtype(['t', 't', 't'])
 
     servers = storage.server_list()
@@ -275,7 +276,7 @@ def storage_center_list(session: DsmSession) -> int:
     """
     storage_centers = session.storage_centers()
     table = Texttable()
-    table.header(["Name", "IP", "Instance ID", "Serial"])
+    table.header(["name", "ip", "instance_id", "serial"])
     table.set_cols_dtype(['t', 't', 't', 't'])
 
     for storage_center in storage_centers:
